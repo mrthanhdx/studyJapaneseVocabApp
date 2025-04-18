@@ -2,10 +2,7 @@ package com.example.nihongovocablearner.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -13,24 +10,25 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "vocabulary")
+@ToString
 public class Vocab {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "word", nullable = false)
+    @Column(name = "word", nullable = true,columnDefinition = "NVARCHAR(255)")
     private String word;
     @Column(name = "romanji")
     private String romanji;
 
-    @Column(name = "meaning", nullable = false)
+    @Column(name = "meaning", nullable = true)
     private String meaning;
 
     @Column(name = "image_path")
     private String imagePath;
 
-    @Column(name = "correct_count", nullable = false)
+    @Column(name = "correct_count", nullable = true)
     private int correctCount = 0; // counts the number of times the word is answered correctly
 
     @ManyToOne

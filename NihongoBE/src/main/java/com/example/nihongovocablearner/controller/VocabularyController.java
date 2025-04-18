@@ -1,6 +1,7 @@
 package com.example.nihongovocablearner.controller;
 
 
+import com.example.nihongovocablearner.dto.VocabDto;
 import com.example.nihongovocablearner.entity.Lesson;
 import com.example.nihongovocablearner.entity.Vocab;
 import com.example.nihongovocablearner.service.LessonService;
@@ -8,13 +9,7 @@ import com.example.nihongovocablearner.service.UploadToCloudinary;
 import com.example.nihongovocablearner.service.VocabService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,15 +31,22 @@ public class VocabularyController {
     }
 
     @PostMapping("/new-vocab")
-    public ResponseEntity<?> createNewLesson(Vocab vocab, @RequestParam(name = "vocabImg",required = false) MultipartFile vocabImg , @RequestParam("idLesson") Long idLesson) throws IOException {
+    public ResponseEntity<?> createNewLesson(
+            @RequestBody VocabDto vocabDto,  // Accept JSON body
+            @RequestParam("idLesson") Long idLesson) throws IOException {
+
+        System.out.println("Received: " + vocabDto);
+
         Lesson lesson = lessonService.findById(idLesson);
+
+        Vocab vocab = new Vocab();
+        vocab.setWord(vocabDto.getWord());
+        vocab.setRomanji(vocabDto.getRomanji());
+        vocab.setMeaning(vocabDto.getMeaning());
         vocab.setLesson(lesson);
-       if (vocabImg!=null) {
-           String path = uploadToCloudinary.uploadImage(vocabImg);
-           vocab.setImagePath(path);
-       }
+
         vocabService.save(vocab);
-        return ResponseEntity.ok("Create new vocabulary successfully !");
+        return ResponseEntity.ok("Vocabulary created successfully");
     }
 
     @DeleteMapping("/delete-vocab/{idVocab}")
