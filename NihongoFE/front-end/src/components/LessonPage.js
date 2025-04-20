@@ -5,13 +5,14 @@ import { Modal, Button, Card, ListGroup, Spinner, Alert } from 'react-bootstrap'
 import { Trash } from 'react-bootstrap-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const LessonPage = ({ lessonId, onBack, level }) => {
+const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
     const [currentPage, setCurrentPage] = useState('lesson');
     const [vocabList, setVocabList] = useState([]);
     const [kanjiList, setKanjiList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    
+    const [lessonInfo, setLessonInfo] = useState(null);
+
     // New vocab modal state
     const [showVocabModal, setShowVocabModal] = useState(false);
     const [newVocab, setNewVocab] = useState({
@@ -55,6 +56,11 @@ const LessonPage = ({ lessonId, onBack, level }) => {
             } finally {
                 setLoading(false);
             }
+
+            const lessonResponse = await fetch(`http://localhost:7070/lesson/${lessonId}`);
+            if (!lessonResponse.ok) throw new Error('Failed to fetch lesson info');
+            const lessonData = await lessonResponse.json();
+            setLessonInfo(lessonData);
         };
 
         fetchLessonData();
@@ -90,12 +96,12 @@ const LessonPage = ({ lessonId, onBack, level }) => {
             });
 
             if (!response.ok) throw new Error('Failed to add vocabulary');
-        
+
             // Refresh the vocabulary list
             const vocabResponse = await fetch(`http://localhost:7070/lesson/show-vocab-lesson/${lessonId}`);
             const vocabData = await vocabResponse.json();
             setVocabList(vocabData);
-    
+
             // Reset form and close modal
             setNewVocab({
                 word: '',
@@ -122,12 +128,12 @@ const LessonPage = ({ lessonId, onBack, level }) => {
             });
 
             if (!response.ok) throw new Error('Failed to add kanji');
-        
+
             // Refresh the kanji list
             const kanjiResponse = await fetch(`http://localhost:7070/kanji/lesson/${lessonId}`);
             const kanjiData = await kanjiResponse.json();
             setKanjiList(kanjiData);
-    
+
             // Reset form and close modal
             setNewKanji({
                 character: '',
@@ -148,7 +154,7 @@ const LessonPage = ({ lessonId, onBack, level }) => {
 
     const handleConfirmDelete = async () => {
         try {
-            let endpoint = isDeletingVocab 
+            let endpoint = isDeletingVocab
                 ? `http://localhost:7070/vocab/delete-vocab/${itemToDelete.id}`
                 : `http://localhost:7070/kanji/delete/${itemToDelete.id}`;
 
@@ -186,9 +192,26 @@ const LessonPage = ({ lessonId, onBack, level }) => {
     }
 
     return (
-        <div className="container mt-4">
+        <div className="container mt-4" style={{paddingTop:'5px' }}>
+            <div style={{marginBottom:'20px'}} className="d-flex gap-3 mt-4">
+                <Button
+                    variant="primary"
+                    onClick={() => setCurrentPage('practiceVocab')}
+                    disabled={vocabList.length === 0}
+                >
+                    Practice Vocabulary
+                </Button>
+                <Button
+                    variant="warning"
+                    onClick={() => setCurrentPage('practiceKanji')}
+                    disabled={kanjiList.length === 0}
+                >
+                    Practice Kanji
+                </Button>
+            </div>
+            
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>Lesson {lessonId} - {level} Level</h2>
+            <h2>Lesson {lessonInfo?.lessonNumber} - {level} Level</h2>
                 <Button variant="outline-secondary" onClick={onBack}>
                     Back to Lessons
                 </Button>
@@ -201,8 +224,8 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                     <Card className="mb-4">
                         <Card.Header className="d-flex justify-content-between align-items-center">
                             <h5>Vocabulary</h5>
-                            <Button 
-                                variant="primary" 
+                            <Button
+                                variant="primary"
                                 size="sm"
                                 onClick={() => setShowVocabModal(true)}
                             >
@@ -220,20 +243,20 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                                         vocabList.map((vocab, index) => (
                                             <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <strong>{vocab.word}</strong> 
+                                                    <strong>{vocab.word}</strong>
                                                     {vocab.romanji && <span className="text-muted ms-2">({vocab.romanji})</span>}
                                                     <div className="text-muted">{vocab.meaning}</div>
                                                 </div>
                                                 <div className="d-flex align-items-center">
                                                     {vocab.imagePath && (
-                                                        <img 
-                                                            src={vocab.imagePath} 
-                                                            alt={vocab.word} 
+                                                        <img
+                                                            src={vocab.imagePath}
+                                                            alt={vocab.word}
                                                             style={{ width: '50px', height: '50px', objectFit: 'cover', marginRight: '10px' }}
                                                         />
                                                     )}
-                                                    <Button 
-                                                        variant="outline-danger" 
+                                                    <Button
+                                                        variant="outline-danger"
                                                         size="sm"
                                                         onClick={() => handleDeleteClick(vocab, true)}
                                                         title="Delete vocabulary"
@@ -256,8 +279,8 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                     <Card className="mb-4">
                         <Card.Header className="d-flex justify-content-between align-items-center">
                             <h5>Kanji</h5>
-                            <Button 
-                                variant="primary" 
+                            <Button
+                                variant="primary"
                                 size="sm"
                                 onClick={() => setShowKanjiModal(true)}
                             >
@@ -279,8 +302,8 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                                                     <div className="text-muted">{kanji.hiragana}</div>
                                                     <div className="text-muted">{kanji.meaning}</div>
                                                 </div>
-                                                <Button 
-                                                    variant="outline-danger" 
+                                                <Button
+                                                    variant="outline-danger"
                                                     size="sm"
                                                     onClick={() => handleDeleteClick(kanji, false)}
                                                     title="Delete kanji"
@@ -299,22 +322,7 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                 </div>
             </div>
 
-            <div className="d-flex gap-3 mt-4">
-                <Button 
-                    variant="primary" 
-                    onClick={() => setCurrentPage('practiceVocab')}
-                    disabled={vocabList.length === 0}
-                >
-                    Practice Vocabulary
-                </Button>
-                <Button 
-                    variant="warning" 
-                    onClick={() => setCurrentPage('practiceKanji')}
-                    disabled={kanjiList.length === 0}
-                >
-                    Practice Kanji
-                </Button>
-            </div>
+            
 
             {/* Add Vocabulary Modal */}
             <Modal show={showVocabModal} onHide={() => setShowVocabModal(false)}>
@@ -333,16 +341,7 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                             required
                         />
                     </div>
-                    <div className="mb-3">
-                        <label className="form-label">Romanji</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            name="romanji"
-                            value={newVocab.romanji}
-                            onChange={handleVocabChange}
-                        />
-                    </div>
+                   
                     <div className="mb-3">
                         <label className="form-label">Meaning</label>
                         <input
@@ -421,7 +420,7 @@ const LessonPage = ({ lessonId, onBack, level }) => {
                     <Modal.Title>Confirm Deletion</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Are you sure you want to delete this {isDeletingVocab ? 'vocabulary' : 'kanji'}: 
+                    Are you sure you want to delete this {isDeletingVocab ? 'vocabulary' : 'kanji'}:
                     <strong> {isDeletingVocab ? itemToDelete?.word : itemToDelete?.character}</strong>?
                 </Modal.Body>
                 <Modal.Footer>

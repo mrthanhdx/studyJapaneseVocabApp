@@ -21,7 +21,7 @@ public class Kanji {
     @Column(name = "hiragana", columnDefinition = "NVARCHAR(255)")
     private String hiragana; // Hiragana reading
 
-    @Column(name = "meaning")
+    @Column(name = "meaning", columnDefinition = "NVARCHAR(255)")
     private String meaning;
 
     @ManyToOne

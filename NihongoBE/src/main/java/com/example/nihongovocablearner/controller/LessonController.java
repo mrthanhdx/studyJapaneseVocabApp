@@ -28,6 +28,11 @@ public class LessonController {
         return ResponseEntity.ok(lessonService.findAll());
     }
 
+    @GetMapping("/{idLesson}")
+    public ResponseEntity<?> getLessonById(@PathVariable Long idLesson) {
+        return ResponseEntity.ok(lessonService.findById(idLesson));
+    }
+
     @GetMapping("/show-vocab-lesson/{idLesson}")
     public ResponseEntity<?> showVocabLesson(@PathVariable("idLesson") Long idLesson) {
         Lesson lesson = lessonService.findById(idLesson);

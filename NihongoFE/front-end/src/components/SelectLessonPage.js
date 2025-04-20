@@ -1,157 +1,190 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  Container, 
+  Button, 
+  Modal, 
+  Form, 
+  ListGroup, 
+  Spinner, 
+  Alert, 
+  Badge,
+  Row,
+  Col
+} from 'react-bootstrap';
 
 const SelectLessonPage = ({ onSelectLesson, level }) => {
-    const [lessons, setLessons] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [levelId, setLevelId] = useState(null);
-  
-    const [lessonName, setLessonName] = useState('');
-    const [lessonNumber, setLessonNumber] = useState('');
-    const [creating, setCreating] = useState(false);
-  
-    useEffect(() => {
-      // First fetch all levels to find the ID for our selected level name
-      const fetchLevelId = async () => {
-        try {
-          const response = await fetch('http://localhost:7070/level/show-all');
-          if (!response.ok) throw new Error('Failed to fetch levels');
-          const levels = await response.json();
-          const foundLevel = levels.find(l => l.name === level);
-          if (!foundLevel) throw new Error('Level not found');
-          setLevelId(foundLevel.id);
-          fetchLessons(foundLevel.id);
-        } catch (err) {
-          setError(err.message || 'Something went wrong');
-          setLoading(false);
-        }
-      };
-  
-      fetchLevelId();
-    }, [level]);
-  
-    const fetchLessons = async (id) => {
-      setLoading(true);
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [levelId, setLevelId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    number: ''
+  });
+
+  useEffect(() => {
+    const fetchLevelId = async () => {
       try {
-        const response = await fetch(`http://localhost:7070/level/show-lessons-level/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch lessons');
-        const data = await response.json();
-        setLessons(data);
+        const response = await fetch('http://localhost:7070/level/show-all');
+        if (!response.ok) throw new Error('Failed to fetch levels');
+        const levels = await response.json();
+        const foundLevel = levels.find(l => l.name === level);
+        if (!foundLevel) throw new Error('Level not found');
+        setLevelId(foundLevel.id);
+        fetchLessons(foundLevel.id);
       } catch (err) {
         setError(err.message || 'Something went wrong');
-      } finally {
         setLoading(false);
       }
     };
-  
-    const handleCreateLesson = async () => {
-      if (!lessonName.trim() || !lessonNumber.trim() || !levelId) {
-        alert('Please fill in all fields');
-        return;
-      }
-  
-      setCreating(true);
-      try {
-        const response = await fetch(`http://localhost:7070/lesson/new-lesson?idLevel=${levelId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            lessonName, 
-            lessonNumber: parseInt(lessonNumber) 
-          }),
-        });
-  
-        if (!response.ok) throw new Error('Failed to create new lesson');
-  
-        alert('Lesson created successfully!');
-        setLessonName('');
-        setLessonNumber('');
-        fetchLessons(levelId);
-        window.bootstrap.Modal.getInstance(document.getElementById('createLessonModal')).hide();
-      } catch (err) {
-        alert(err.message || 'Failed to create lesson');
-      } finally {
-        setCreating(false);
-      }
-    };
+
+    fetchLevelId();
+  }, [level]);
+
+  const fetchLessons = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:7070/level/show-lessons-level/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch lessons');
+      const data = await response.json();
+      setLessons(data);
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCreateLesson = async () => {
+    if (!formData.name.trim() || !formData.number.trim() || !levelId) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:7070/lesson/new-lesson?idLevel=${levelId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          lessonName: formData.name,
+          lessonNumber: parseInt(formData.number) 
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create new lesson');
+
+      setFormData({ name: '', number: '' });
+      setShowModal(false);
+      fetchLessons(levelId);
+    } catch (err) {
+      alert(err.message || 'Failed to create lesson');
+    }
+  };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-3">Lesson List - JLPT {level}</h2>
+    <Container className="py-4">
+      <Row className="align-items-center mb-4">
+        <Col>
+          <h2 className="mb-0">
+            <Badge bg="secondary" className="me-2">JLPT {level}</Badge>
+            Lesson List
+          </h2>
+        </Col>
+        <Col xs="auto">
+          <Button 
+            variant="primary" 
+            onClick={() => setShowModal(true)}
+            className="d-flex align-items-center"
+          >
+            <i className="bi bi-plus-lg me-2"></i> New Lesson
+          </Button>
+        </Col>
+      </Row>
 
-      <button
-        className="btn btn-primary mb-3"
-        data-bs-toggle="modal"
-        data-bs-target="#createLessonModal"
-      >
-        + Create New Lesson
-      </button>
-
-      <div className="modal fade" id="createLessonModal" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Create New Lesson for {level}</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
-            </div>
-            <div className="modal-body">
-              <div className="mb-3">
-                <label className="form-label">Lesson Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={lessonName}
-                  onChange={(e) => setLessonName(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Lesson Number</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={lessonNumber}
-                  onChange={(e) => setLessonNumber(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-success"
-                onClick={handleCreateLesson}
-                disabled={creating}
-              >
-                {creating ? 'Creating...' : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {error && (
+        <Alert variant="danger" className="mt-3">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
-        <div className="text-center mt-4">Loading...</div>
-      ) : error ? (
-        <div className="alert alert-danger mt-4">Error: {error}</div>
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2">Loading lessons...</p>
+        </div>
       ) : lessons.length > 0 ? (
-        <ul className="list-group">
+        <ListGroup variant="flush" className="shadow-sm">
           {lessons.map((lesson) => (
-            <li
+            <ListGroup.Item 
               key={lesson.id}
-              className="list-group-item list-group-item-action text-primary"
-              style={{ cursor: 'pointer' }}
+              action 
               onClick={() => onSelectLesson(lesson.id)}
+              className="py-3 d-flex justify-content-between align-items-center"
             >
-              {lesson.lessonName || 'Untitled Lesson'}
-            </li>
+              <div>
+                <span className="text-muted me-2">Lesson {lesson.lessonNumber}:</span>
+                <strong>{lesson.lessonName || 'Untitled Lesson'}</strong>
+              </div>
+              <i className="bi bi-chevron-right text-primary"></i>
+            </ListGroup.Item>
           ))}
-        </ul>
+        </ListGroup>
       ) : (
-        <div className="alert alert-info mt-4">No lessons found for {level} level</div>
+        <Alert variant="info" className="mt-4">
+          <i className="bi bi-info-circle-fill me-2"></i>
+          No lessons found for {level} level
+        </Alert>
       )}
-    </div>
+
+      {/* Create Lesson Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Create New Lesson</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Lesson Number</Form.Label>
+              <Form.Control
+                type="number"
+                name="number"
+                value={formData.number}
+                onChange={handleInputChange}
+                placeholder="e.g. 1, 2, 3..."
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Lesson Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g. Greetings, Verbs..."
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleCreateLesson}>
+            Create Lesson
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 

@@ -1,6 +1,7 @@
 package com.example.nihongovocablearner.controller;
 
 import com.example.nihongovocablearner.entity.Kanji;
+import com.example.nihongovocablearner.repository.KanjiRepository;
 import com.example.nihongovocablearner.service.KanjiService;
 import com.example.nihongovocablearner.service.LessonService;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ public class KanjiController {
 
     private final KanjiService kanjiService;
     private final LessonService lessonService;
+
 
     public KanjiController(KanjiService kanjiService, LessonService lessonService) {
         this.kanjiService = kanjiService;

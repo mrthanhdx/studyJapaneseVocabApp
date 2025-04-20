@@ -22,7 +22,7 @@ public class Vocab {
     @Column(name = "romanji")
     private String romanji;
 
-    @Column(name = "meaning", nullable = true)
+    @Column(name = "meaning", nullable = true,columnDefinition = "NVARCHAR(255)")
     private String meaning;
 
     @Column(name = "image_path")
