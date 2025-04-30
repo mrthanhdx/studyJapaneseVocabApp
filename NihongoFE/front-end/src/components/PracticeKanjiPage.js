@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Button, Alert, Spinner } from 'react-bootstrap';
 import '../styles/halloweenTheme.css';
 
@@ -12,9 +12,10 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
         quizFinished: false,
         remainingQuestions: 0,
         meaning: null,
-        isContinueVisible: false, // Điều khiển hiển thị nút "Continue"
-        autoNextTimeout: null // Giới hạn thời gian tự động chuyển câu hỏi
+        isContinueVisible: false
     });
+
+    const autoNextTimeoutRef = useRef(null); // Dùng để lưu timeout ID
 
     const startQuiz = async () => {
         try {
@@ -41,6 +42,9 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
     };
 
     const restartQuiz = () => {
+        clearTimeout(autoNextTimeoutRef.current);
+        autoNextTimeoutRef.current = null;
+
         setQuizState({
             currentQuestion: null,
             selectedIndex: null,
@@ -50,8 +54,7 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
             quizFinished: false,
             remainingQuestions: 0,
             meaning: null,
-            isContinueVisible: false,
-            autoNextTimeout: null
+            isContinueVisible: false
         });
 
         startQuiz();
@@ -83,8 +86,7 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
                 isCorrect: null,
                 meaning: null,
                 remainingQuestions: data.remaining || 0,
-                isContinueVisible: false, // Reset nút "Continue"
-                autoNextTimeout: null // Reset timeout tự động
+                isContinueVisible: false
             }));
         } catch (err) {
             setQuizState(prev => ({ ...prev, error: err.message }));
@@ -118,14 +120,18 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
             const remaining = result.remaining;
             const meaning = result.correct ? result.meaning : null;
 
+            autoNextTimeoutRef.current = setTimeout(() => {
+                fetchQuestion();
+                autoNextTimeoutRef.current = null;
+            }, 6500);
+
             setQuizState(prev => ({
                 ...prev,
                 selectedIndex,
                 isCorrect,
                 meaning,
                 remainingQuestions: remaining,
-                isContinueVisible: true, // Hiển thị nút "Continue" khi trả lời xong
-                autoNextTimeout: setTimeout(() => fetchQuestion(), 6500) // Đặt timeout tự động chuyển câu hỏi
+                isContinueVisible: true
             }));
         } catch (err) {
             setQuizState(prev => ({ ...prev, error: err.message }));
@@ -135,8 +141,9 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
     };
 
     const handleContinue = () => {
-        if (quizState.autoNextTimeout) {
-            clearTimeout(quizState.autoNextTimeout); // Hủy timeout nếu người dùng bấm "Continue"
+        if (autoNextTimeoutRef.current) {
+            clearTimeout(autoNextTimeoutRef.current);
+            autoNextTimeoutRef.current = null;
         }
         fetchQuestion();
     };
@@ -145,8 +152,8 @@ const PracticeKanjiPage = ({ lessonId, level, onBack }) => {
         startQuiz();
 
         return () => {
-            if (quizState.autoNextTimeout) {
-                clearTimeout(quizState.autoNextTimeout); // Hủy timeout khi component unmount
+            if (autoNextTimeoutRef.current) {
+                clearTimeout(autoNextTimeoutRef.current);
             }
         };
     }, [lessonId]);

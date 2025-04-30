@@ -20,7 +20,7 @@ public class Lesson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "lesson_name", nullable = false)
+    @Column(name = "lesson_name", nullable = false,columnDefinition = "NVARCHAR(255)")
     private String lessonName;
 
     @Column(name = "lesson_number", nullable = false)

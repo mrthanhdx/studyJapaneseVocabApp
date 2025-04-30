@@ -192,8 +192,8 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
     }
 
     return (
-        <div className="container mt-4" style={{paddingTop:'5px' }}>
-            <div style={{marginBottom:'20px'}} className="d-flex gap-3 mt-4">
+        <div className="container mt-4" style={{ paddingTop: '5px' }}>
+            <div style={{ marginBottom: '20px' }} className="d-flex gap-3 mt-4">
                 <Button
                     variant="primary"
                     onClick={() => setCurrentPage('practiceVocab')}
@@ -209,9 +209,9 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                     Practice Kanji
                 </Button>
             </div>
-            
+
             <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Lesson {lessonInfo?.lessonNumber} - {level} Level</h2>
+                <h2>Lesson {lessonInfo?.lessonNumber} - {level} Level</h2>
                 <Button variant="outline-secondary" onClick={onBack}>
                     Back to Lessons
                 </Button>
@@ -242,19 +242,14 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                                     {vocabList.length > 0 ? (
                                         vocabList.map((vocab, index) => (
                                             <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <strong>{vocab.word}</strong>
-                                                    {vocab.romanji && <span className="text-muted ms-2">({vocab.romanji})</span>}
-                                                    <div className="text-muted">{vocab.meaning}</div>
+                                                <div className="d-flex flex-column" style={{ flex: 1 }}>
+                                                    <h6 style={{ textAlign: 'left', marginBottom: '0.25rem' }}>
+                                                        {vocab.word}
+                                                        {vocab.romanji && <span className="text-muted ms-2">({vocab.romanji})</span>}
+                                                    </h6>
+                                                    <div className="text-muted" style={{ textAlign: 'left' }}>{vocab.meaning}</div>
                                                 </div>
                                                 <div className="d-flex align-items-center">
-                                                    {vocab.imagePath && (
-                                                        <img
-                                                            src={vocab.imagePath}
-                                                            alt={vocab.word}
-                                                            style={{ width: '50px', height: '50px', objectFit: 'cover', marginRight: '10px' }}
-                                                        />
-                                                    )}
                                                     <Button
                                                         variant="outline-danger"
                                                         size="sm"
@@ -265,6 +260,7 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                                                     </Button>
                                                 </div>
                                             </ListGroup.Item>
+
                                         ))
                                     ) : (
                                         <ListGroup.Item>No vocabulary available</ListGroup.Item>
@@ -298,8 +294,8 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                                         kanjiList.map((kanji, index) => (
                                             <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <div className="kanji-character display-6">{kanji.character}</div>
-                                                    <div className="text-muted">{kanji.hiragana}</div>
+                                                    <div style={{ fontSize: '16px' }} className="text-muted">{kanji.hiragana}</div>
+                                                    <div style={{ fontSize: '26px' }} className="kanji-character display-6">{kanji.character}</div>
                                                     <div className="text-muted">{kanji.meaning}</div>
                                                 </div>
                                                 <Button
@@ -322,7 +318,7 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                 </div>
             </div>
 
-            
+
 
             {/* Add Vocabulary Modal */}
             <Modal show={showVocabModal} onHide={() => setShowVocabModal(false)}>
@@ -341,7 +337,7 @@ const LessonPage = ({ lessonId, lessonNumber, onBack, level }) => {
                             required
                         />
                     </div>
-                   
+
                     <div className="mb-3">
                         <label className="form-label">Meaning</label>
                         <input
